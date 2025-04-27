@@ -6,6 +6,7 @@ import Slider from "react-slick";
 import Modal from "react-modal";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import Review from "../Review";
 
 // Bind modal to app element
 Modal.setAppElement("#root");
@@ -229,6 +230,9 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Review */}
+        <Review productId={id} userId={userId} />
 
         {/* Modal để nhập số lượng */}
         <Modal

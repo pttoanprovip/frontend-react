@@ -38,7 +38,7 @@ export const placeOrder = async (orderRequest) => {
   }
 };
 
-export const getOrder = async (id) => {
+export const getOrderById = async (id) => {
   try {
     const response = await axiosInstance.get(`/${id}`);
     return response.data;

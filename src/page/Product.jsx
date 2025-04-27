@@ -1,7 +1,7 @@
 import { useState } from "react";
-import ProductList from "../compoment/product/ProductList";
-import Header from "../compoment/Header";
-import Footer from "../compoment/Footer";
+import ProductList from "../component/product/ProductList";
+import Header from "../component/Header";
+import Footer from "../component/Footer";
 
 export default function Product() {
   const [searchResults, setSearchResults] = useState(null); // Lưu kết quả tìm kiếm

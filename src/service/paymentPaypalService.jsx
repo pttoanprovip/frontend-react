@@ -6,49 +6,58 @@ const getToken = () => localStorage.getItem("token");
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => {
-    console.error("Lỗi interceptor yêu cầu: ", error);
+    console.error("Axios request interceptor error:", error);
     return Promise.reject(error);
   }
 );
 
-export const createPayment = async (paymentRequest) =>{
+const handleError = (error) => {
+  const status = error.response?.status;
+  const message = error.response?.data?.message || "Lỗi hệ thống";
+  console.error("Payment error details:", {
+    status,
+    message,
+    response: error.response?.data,
+  });
+  if (status === 401) throw new Error("Vui lòng đăng nhập lại");
+  if (status === 400 && message.includes("Payment has already been completed")) {
+    throw new Error("Thanh toán đã được hoàn tất trước đó");
+  }
+  throw new Error(message);
+};
+
+export const createPayment = async (paymentRequest) => {
   try {
     const response = await axiosInstance.post("/create", paymentRequest);
+    console.log("Create payment response:", response.data);
+    if (typeof response.data !== "string" || !response.data.startsWith("https://")) {
+      console.error("Invalid create payment response:", response.data);
+      throw new Error("Phản hồi từ API không phải URL hợp lệ");
+    }
     return response.data;
   } catch (error) {
-    const msg =
-      error.response?.status === 401
-        ? "Vui lòng đăng nhập lại"
-        : error.response?.data?.message || "Lỗi khi thêm sản phẩm";
-    throw new Error(msg);
+    handleError(error);
   }
-}
+};
 
 export const executePayment = async (paymentId, payerId) => {
   try {
     const response = await axiosInstance.get(`/execute`, {
       params: { paymentId, PayerID: payerId },
     });
-    return response.data; // Trả về PaymentResponse
+    console.log("Execute payment response:", response.data);
+    return response.data;
   } catch (error) {
-    const msg =
-      error.response?.status === 401
-        ? "Vui lòng đăng nhập lại"
-        : error.response?.data || "Lỗi khi thực thi thanh toán PayPal";
-    throw new Error(msg);
+    handleError(error);
   }
 };
