@@ -13,6 +13,7 @@ import Header from "../Header";
 import Footer from "../Footer";
 import Modal from "react-modal";
 import Payment from "../payment/Payment";
+import Discount from "../Discount"; // Import component Discount
 
 // Gắn modal vào phần tử ứng dụng
 Modal.setAppElement("#root");
@@ -53,11 +54,19 @@ export default function OrderForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [discountCode, setDiscountCode] = useState(null); // Lưu mã giảm giá
+  const [discountedPrice, setDiscountedPrice] = useState(null); // Lưu giá sau giảm giá
 
   // Tính tổng giá trị đơn hàng
   const totalPrice = orderItems
     ? orderItems.reduce((total, item) => total + item.price * item.quantity, 0)
     : 0;
+
+  // Callback xử lý khi áp dụng mã giảm giá
+  const handleDiscountApplied = (code, price) => {
+    setDiscountCode(code);
+    setDiscountedPrice(price);
+  };
 
   useEffect(() => {
     const paymentId = searchParams.get("paymentId");
@@ -74,7 +83,7 @@ export default function OrderForm() {
             "orderInfo",
             JSON.stringify({
               orderId: result.orderId || "N/A",
-              totalPrice,
+              totalPrice: discountedPrice || totalPrice, // Sử dụng giá sau giảm giá nếu có
               paymentMethod: "ONLINE",
               transactionId: result.transactionId || result.id,
             })
@@ -82,7 +91,7 @@ export default function OrderForm() {
           navigate("/order-success", {
             state: {
               orderId: result.orderId || "N/A",
-              totalPrice,
+              totalPrice: discountedPrice || totalPrice,
               paymentMethod: "ONLINE",
               transactionId: result.transactionId || result.id,
             },
@@ -97,7 +106,7 @@ export default function OrderForm() {
       };
       completePayment();
     }
-  }, [searchParams, navigate, totalPrice]);
+  }, [searchParams, navigate, totalPrice, discountedPrice]);
 
   useEffect(() => {
     if (!userId) {
@@ -175,7 +184,7 @@ export default function OrderForm() {
       const orderRequest = {
         userId,
         addressId: selectedAddressId,
-        discountCode: null,
+        discountCode, // Gửi mã giảm giá
         order_items: orderItems.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -191,7 +200,7 @@ export default function OrderForm() {
         navigate("/order-success", {
           state: {
             orderId,
-            totalPrice,
+            totalPrice: discountedPrice || totalPrice, // Sử dụng giá sau giảm giá nếu có
             paymentMethod,
           },
         });
@@ -201,7 +210,7 @@ export default function OrderForm() {
           "pendingOrder",
           JSON.stringify({
             orderId,
-            totalPrice,
+            totalPrice: discountedPrice || totalPrice,
             paymentMethod: "ONLINE",
           })
         );
@@ -294,11 +303,19 @@ export default function OrderForm() {
                     </div>
                   ))}
                   <div className="flex justify-between font-bold text-lg mt-4">
-                    <span>Tổng cộng:</span>
+                    <span>Tổng cộng (trước giảm giá):</span>
                     <span className="text-red-600">
                       {totalPrice.toLocaleString()}₫
                     </span>
                   </div>
+                  {discountedPrice && (
+                    <div className="flex justify-between font-bold text-lg mt-2">
+                      <span>Tổng cộng (sau giảm giá):</span>
+                      <span className="text-green-600">
+                        {discountedPrice.toLocaleString()}₫
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -343,6 +360,12 @@ export default function OrderForm() {
                 Thêm Địa Chỉ Mới
               </button>
             </div>
+
+            {/* Mã giảm giá */}
+            <Discount
+              totalPrice={totalPrice}
+              onDiscountApplied={handleDiscountApplied}
+            />
 
             {/* Phương thức thanh toán */}
             <Payment onPaymentChange={setPaymentMethod} />

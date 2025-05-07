@@ -1,21 +1,23 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import ProductList from "../component/product/ProductList";
 import Header from "../component/Header";
 import Footer from "../component/Footer";
 
 export default function Product() {
-  const [searchResults, setSearchResults] = useState(null); // Lưu kết quả tìm kiếm
+  const [searchResults, setSearchResults] = useState(null);
+  const location = useLocation();
+  const selectedCategory = location.state?.category || null; // Lấy category từ state
 
   const handleSearchResults = (results) => {
-    setSearchResults(results); // Cập nhật kết quả tìm kiếm
+    setSearchResults(results);
   };
 
   return (
     <div className="min-h-screen min-w-screen bg-gray-100">
       <Header onSearchResults={handleSearchResults} />
       <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-6">Sản phẩm</h1>
-        <ProductList searchResults={searchResults} />
+        <ProductList searchResults={searchResults} category={selectedCategory} />
       </div>
       <Footer />
     </div>

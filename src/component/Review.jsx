@@ -168,7 +168,7 @@ export default function Review({ productId, userId }) {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-800">
-                    {review.name || "Người dùng"}
+                    {review.userName || "Người dùng"}
                   </span>
                   <span className="text-yellow-500">
                     {"★".repeat(review.rate)}
@@ -178,7 +178,7 @@ export default function Review({ productId, userId }) {
                 <p className="text-gray-600 mt-1">{review.reviewText}</p>
 
                 <p className="text-gray-400 text-xs mt-1">
-                  {new Date(review.createdAt).toLocaleDateString()}
+                  {new Date(review.createAt).toLocaleDateString()}
                 </p>
               </div>
               {userId === review.userId && (

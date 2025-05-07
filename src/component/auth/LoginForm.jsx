@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { login, loginWithGoogle } from "../../service/authService";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { jwtDecode } from "jwt-decode";
 
 export default function LoginForm() {
+  const { loginUser } = useAuth();
   const [form, setForm] = useState({
     name: "",
     password: "",
@@ -23,10 +26,22 @@ export default function LoginForm() {
     const { name, password } = form;
     try {
       const response = await login(name, password);
-      localStorage.setItem("token", response.token);
-      console.log(response.token);
-      
-      navigate("/home");
+      console.log("Login response:", response);
+
+      // Giải mã token để lấy scope
+      const decodedToken = jwtDecode(response.token);
+      const userRole = decodedToken.scope; // Lấy scope từ token
+      console.log("Decoded token:", decodedToken); // Gỡ lỗi
+
+      // Lưu token và role vào AuthContext
+      loginUser(response.token, userRole);
+
+      // Điều hướng dựa trên role
+      if (userRole === "Admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       setError(
         error.message ||
@@ -37,7 +52,23 @@ export default function LoginForm() {
 
   const handleGoogleLogin = async () => {
     try {
-      await loginWithGoogle();
+      const response = await loginWithGoogle();
+      console.log("Google login response:", response);
+
+      // Giải mã token để lấy scope
+      const decodedToken = jwtDecode(response.token);
+      const userRole = decodedToken.scope; // Lấy scope từ token
+      console.log("Decoded token:", decodedToken); // Gỡ lỗi
+
+      // Lưu token và role vào AuthContext
+      loginUser(response.token, userRole);
+
+      // Điều hướng dựa trên role
+      if (userRole === "Admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       setError(error.message || "Đăng nhập Google thất bại.");
     }
@@ -84,7 +115,7 @@ export default function LoginForm() {
         </div>
         <button
           type="submit"
-          className="w-full bg-indigo-600! text-white py-2 px-4 rounded-md hover:bg-indigo-700 mb-4"
+          className="w-full !bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 mb-4"
         >
           Đăng Nhập
         </button>

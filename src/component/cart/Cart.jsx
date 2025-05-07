@@ -159,7 +159,7 @@ export default function Cart() {
             <p className="text-gray-500 mb-4">Giỏ hàng của bạn còn trống</p>
             <button
               className="!bg-red-500 text-white px-8 py-2 rounded-sm hover:bg-red-600"
-              onClick={() => navigate("/products")}
+              onClick={() => navigate("/product")}
             >
               Mua ngay
             </button>

@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../../service/productService";
 import { addItem } from "../../service/cartService";
+import { useCart } from "../../context/CartContext";
 import Slider from "react-slick";
 import Modal from "react-modal";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Review from "../Review";
 
-// Bind modal to app element
 Modal.setAppElement("#root");
 
 const getUserIdFromToken = () => {
@@ -35,6 +35,7 @@ export default function ProductDetail() {
   const [cartError, setCartError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const { fetchCart } = useCart();
 
   const userId = getUserIdFromToken();
 
@@ -42,7 +43,7 @@ export default function ProductDetail() {
     const fetchProduct = async () => {
       try {
         const data = await getProductById(id);
-        console.log("Product data from API:", data); // Debug log
+        console.log("Product data from API:", data);
         setProduct(data);
       } catch (error) {
         setError(error.message);
@@ -72,6 +73,7 @@ export default function ProductDetail() {
       setCartMessage(`Đã thêm ${product.name} vào giỏ hàng!`);
       setCartError("");
       setTimeout(() => setCartMessage(""), 3000);
+      fetchCart(); // Cập nhật giỏ hàng
     } catch (error) {
       setCartError(error.message);
       setCartMessage("");
@@ -83,18 +85,17 @@ export default function ProductDetail() {
       setCartError("Vui lòng đăng nhập để mua hàng");
       return;
     }
-    setIsModalOpen(true); // Mở modal để nhập số lượng
+    setIsModalOpen(true);
   };
 
   const handleConfirmBuy = () => {
     setIsModalOpen(false);
-    // Chuyển hướng sang trang OrderForm với danh sách orderItems
     const orderItems = [
       {
         productId: product.id,
         quantity,
         productName: product.name,
-        price: product.discountPrice || product.price, // Thêm price
+        price: product.discountPrice || product.price,
       },
     ];
     console.log("OrderItems sent from ProductDetail:", orderItems);
@@ -103,12 +104,10 @@ export default function ProductDetail() {
     });
   };
 
-  // Hàm tăng số lượng
   const increaseQuantity = () => {
     setQuantity((prev) => prev + 1);
   };
 
-  // Hàm giảm số lượng, đảm bảo không nhỏ hơn 1
   const decreaseQuantity = () => {
     setQuantity((prev) => Math.max(1, prev - 1));
   };
@@ -259,12 +258,9 @@ export default function ProductDetail() {
           }}
         >
           <div className="bg-white p-6 rounded-xl shadow-lg max-w-md mx-auto">
-            {/* Header */}
             <h2 className="text-xl font-bold text-gray-800 mb-4">
               Chọn số lượng
             </h2>
-
-            {/* Content */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-600 mb-2">
                 Sản phẩm: <span className="font-semibold">{product.name}</span>
@@ -290,8 +286,6 @@ export default function ProductDetail() {
                 </button>
               </div>
             </div>
-
-            {/* Footer */}
             <div className="flex justify-end gap-3">
               <button
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"

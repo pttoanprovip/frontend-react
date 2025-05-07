@@ -49,7 +49,7 @@ export const getProductById = async (id) => {
 
 export const addProduct = async (product) => {
   try {
-    const response = await axiosInstance.post("/", product);
+    const response = await axiosInstance.post("", product);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi thêm sản phẩm: ", error);

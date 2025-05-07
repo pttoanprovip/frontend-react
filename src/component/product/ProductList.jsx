@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import Pagination from "../Pagination";
-import { getAllProducts } from "../../service/productService";
+import { getAllProducts, getProductByCriteria } from "../../service/productService"; // Thêm getProductByCriteria
 import PropTypes from "prop-types";
 
-export default function ProductList({ searchResults }) {
+export default function ProductList({ searchResults, category }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,25 +12,28 @@ export default function ProductList({ searchResults }) {
   const itemsPerPage = 8;
 
   useEffect(() => {
-    if (searchResults !== null) {
-      // Nếu có kết quả tìm kiếm, sử dụng nó
-      setProducts(searchResults);
-      setLoading(false);
-    } else {
-      // Nếu không, lấy danh sách sản phẩm mặc định
-      const fetchProduct = async () => {
-        try {
-          const data = await getAllProducts();
-          setProducts(data);
-        } catch (error) {
-          setError(error);
-        } finally {
-          setLoading(false);
+    const fetchProducts = async () => {
+      try {
+        let data;
+        if (searchResults !== null) {
+          // Nếu có kết quả tìm kiếm, sử dụng nó
+          data = searchResults;
+        } else if (category) {
+          // Nếu có danh mục, sử dụng getProductByCriteria
+          data = await getProductByCriteria({ category });
+        } else {
+          // Nếu không, lấy toàn bộ sản phẩm
+          data = await getAllProducts();
         }
-      };
-      fetchProduct();
-    }
-  }, [searchResults]);
+        setProducts(data);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [searchResults, category]); // Thêm category vào dependency array
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -42,7 +45,9 @@ export default function ProductList({ searchResults }) {
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">Danh sách sản phẩm</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">
+        {category ? `Sản phẩm thuộc danh mục ${category}` : "Danh sách sản phẩm"}
+      </h2>
       {products.length > 0 ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -65,8 +70,10 @@ export default function ProductList({ searchResults }) {
 
 ProductList.propTypes = {
   searchResults: PropTypes.array,
+  category: PropTypes.string,
 };
 
 ProductList.defaultProps = {
   searchResults: null,
+  category: null,
 };
